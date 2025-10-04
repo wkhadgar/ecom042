@@ -1,0 +1,3 @@
+build:
+  cmake: .
+  board_root: .
