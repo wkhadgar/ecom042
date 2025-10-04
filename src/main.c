@@ -1,42 +1,34 @@
 /**
  * @file main.c
- * @author João Anon (email@edge.ufal.br)
- * @brief
+ * @author Paulo Santos (prms@ic.ufal.br)
+ * @brief Timer simples.
  * @version 0.1
- * @date dd-mm-aaaa
+ * @date 03/10/2025
  *
- * @copyright Copyright (c) aaaa
+ * @copyright Copyright (c) 2025 Paulo Santos
  *
  */
 
 #include <zephyr/kernel.h>
-#include <zephyr/drivers/gpio.h>
 
-/**
- * @brief Nó de exemplo contendo o led de testes.
- */
-#define LED_GPIO DT_NODELABEL(node_a_label)
+#include "zephyr/logging/log.h"
 
-/**
- * @brief Especificação do GPIO de led de testes.
- */
-static const struct gpio_dt_spec led_exemplo = GPIO_DT_SPEC_GET(LED_GPIO, gpios);
+LOG_MODULE_REGISTER(main);
+
+void hello_timer_expiry_cb(struct k_timer* timer) {
+    ARG_UNUSED(timer);
+
+    LOG_DBG("Hello World (from debug!!!!)");
+    LOG_INF("Hello World (from info!!!)");
+    LOG_WRN("Hello World (from warning!!)");
+    LOG_ERR("Hello World (from error!)");
+
+    LOG_WRN_ONCE("Hello World (from very shy warning?!)");
+}
+
+
+K_TIMER_DEFINE(hello_timer, hello_timer_expiry_cb, NULL);
 
 int main() {
-    /* Verifica se o dispositivo está pronto. */
-    if (gpio_is_ready_dt(&led_exemplo) != 0) {
-        return -EBUSY;
-    }
-
-    /* Configura o GPIO como saída, e inicia seu valor para 0. */
-    if (gpio_pin_configure_dt(&led_exemplo, GPIO_OUTPUT_INACTIVE) != 0) {
-        return -ENODEV;
-    }
-
-    /* Blink. */
-    while (true) {
-        gpio_pin_toggle_dt(&led_exemplo);
-
-        k_msleep(1000);
-    }
+    k_timer_start(&hello_timer, K_NO_WAIT, K_MSEC(CONFIG_HELLO_TIMER_PERIOD_MS));
 }

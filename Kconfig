@@ -1,17 +1,7 @@
 menu "Menu do projeto"
-    choice
-    prompt "Escolha:"
-    default A
-
-        config A
-            bool "Opção A"
-
-        config B
-            bool "Opção B"
-
-        config C
-            bool "Opção C"
-    endchoice
+    config HELLO_TIMER_PERIOD_MS
+        int "Periodo de notificação do 'Hello World', em milissegundos"
+        default 1500
 endmenu
 
 source "Kconfig.zephyr"
