@@ -1,0 +1,33 @@
+/**
+ * @file sua-placa-pinctrl.dtsi
+ * @author João Anon (email@edge.ufal.br)
+ * @brief Pin Controller para configuração da UART/SPI.
+ * @version 0.1
+ * @date dd-mm-aaaa
+ *
+ * @copyright Copyright (c) aaaa
+ *
+ */
+
+#include <arm/silabs/gpio_gecko.h>
+#include <dt-bindings/pinctrl/gecko-pinctrl.h>
+
+&pinctrl {
+	/* Configuração para usart0, operando como SPI */
+	usart0_default: usart0_default {
+		group1 {
+			psels = <GECKO_PSEL(SPI_SCK, C, 1)>,
+					<GECKO_PSEL(SPI_MOSI, C, 0)>,
+					<GECKO_PSEL(SPI_MISO, C, 3)>;
+		};
+	};
+
+	/* Configuração para usart1, operando como UART */
+	usart1_default: usart1_default {
+		group1 {
+			psels = <GECKO_PSEL(UART_TX, C, 5)>,
+					<GECKO_PSEL(UART_RX, C, 6)>,
+					<GECKO_LOC(UART, 1)>;
+		};
+	};
+};
