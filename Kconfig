@@ -1,6 +1,6 @@
 menu "Menu do projeto"
-    config HELLO_TIMER_PERIOD_MS
-        int "Periodo de notificação do 'Hello World', em milissegundos"
+    config LED_PERIOD_MS
+        int "Periodo de interação com o LED, em milissegundos"
         default 1500
 endmenu
 

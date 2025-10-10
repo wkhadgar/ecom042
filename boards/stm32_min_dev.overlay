@@ -1,0 +1,29 @@
+/ {
+	zephyr,user {
+		pwm-names = "indicator_led";
+		pwms = <&led_pwm 3 PWM_MSEC(1) PWM_POLARITY_NORMAL>;
+	};
+};
+
+&timers4 {
+	st,prescaler = <359>;
+	status = "okay";
+
+	led_pwm: pwm {
+		status = "okay";
+		pinctrl-0 = <&tim4_ch3_pwm_out_pb8>;
+		pinctrl-names = "default";
+	};
+};
+
+&gpiob {
+	button {
+		compatible = "gpio-keys";
+
+		button0: button0 {
+			gpios = <&gpiob 11 GPIO_ACTIVE_HIGH>;
+		};
+	};
+};
+
+
