@@ -1,118 +1,161 @@
 /**
  * @file main.c
  * @author Paulo Santos (prms@ic.ufal.br)
- * @brief Fade e blink com botão.
+ * @brief Comunicação entre threads.
  * @version 0.1
- * @date 09/10/2025
+ * @date 16/10/2025
  *
  * @copyright Copyright (c) 2025 Paulo Santos
  *
  */
 
 #include <zephyr/kernel.h>
-
-#include "zephyr/drivers/pwm.h"
-#include "zephyr/drivers/gpio.h"
-#include "zephyr/logging/log.h"
-
-/**
- * @brief Especificação do GPIO.
- */
-#define BUTTON_GPIO_SPEC GPIO_DT_SPEC_GET(DT_NODELABEL(button0), gpios)
-
-/**
- * @brief Especificação do PWM.
- */
-#define PWM_SPEC PWM_DT_SPEC_GET_BY_NAME(DT_PATH(zephyr_user), indicator_led)
-
-/**
- * @brief Resolução do fade.
- */
-#define PWM_FADE_STEPS 50
+#include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(main);
 
-enum modes {
-    MODO_1 = 0,
-    MODO_2,
+/**
+ * @brief Umidade mínima considerada válida.
+ */
+#define MIN_HUMIDITY 40
+
+/**
+ * @brief Umidade máxima considerada válida.
+ */
+#define MAX_HUMIDITY 70
+
+/**
+ * @brief Temperatura mínima considerada válida.
+ */
+#define MIN_TEMP 18
+
+/**
+ * @brief Temperatura máxima considerada válida.
+ */
+#define MAX_TEMP 30
+
+
+/**
+ * @brief Identificadores dos tipos de sensores.
+ */
+enum sensor {
+    SENSOR_HUMIDITY = 0,
+    SENSOR_TEMPERATURE,
 };
 
-static struct {
-    bool toggle_state;
-    uint32_t pwm_pulse;
-    enum modes mode;
-} self = {
-    .mode = MODO_1,
+/**
+ * @brief Mensagem de sensoreamento.
+ */
+struct sensing_msg {
+    enum sensor sensor_type;
+
+    union {
+        uint8_t humidity;
+        int8_t temperature;
+    };
 };
 
-const struct pwm_dt_spec pwm_spec = PWM_SPEC;
-
-int blink_thread() {
-    while (true) {
-        pwm_set_pulse_dt(&pwm_spec, self.toggle_state ? pwm_spec.period : 0);
-        self.toggle_state = !self.toggle_state;
-
-        k_msleep(CONFIG_LED_PERIOD_MS);
-    }
+/**
+ * @brief Sensor de umidade simulado.
+ *
+ * @return Umidade, entre 0% e 100%
+ */
+uint8_t get_humidity(void) {
+    return k_cycle_get_32() % 100;
 }
 
-int fade_thread() {
-    int8_t direction = 1;
-    const uint32_t PWM_STEP_NS = (pwm_spec.period / PWM_FADE_STEPS);
-
-    while (true) {
-        for (uint8_t steps = 0; steps < CONFIG_LED_PERIOD_MS / PWM_FADE_STEPS; steps++) {
-            self.pwm_pulse += direction * PWM_STEP_NS;
-            pwm_set_pulse_dt(&pwm_spec, self.pwm_pulse);
-            k_msleep(CONFIG_LED_PERIOD_MS / PWM_FADE_STEPS);
-        }
-        direction *= -1;
-    }
+/**
+ * @brief Sensor de temperatura simulado.
+ *
+ * @return Temperatura, em graus Celsius.
+ */
+int8_t get_temperature(void) {
+    return (int8_t) (k_cycle_get_32() % 100);
 }
 
-K_THREAD_DEFINE(blinking_thread_id, 1048, blink_thread, NULL, NULL, NULL, 5, 0, -1);
-K_THREAD_DEFINE(fading_thread_id, 1048, fade_thread, NULL, NULL, NULL, 5, 0, 0);
+K_MSGQ_DEFINE(filter_q, sizeof(struct sensing_msg), 10, 4);
+K_MSGQ_DEFINE(out_q, sizeof(struct sensing_msg), 10, 4);
 
-void button_pressed_cb() {
-    switch (self.mode) {
-        case MODO_1:
-            self.mode = MODO_2;
-            self.pwm_pulse = 0;
-            k_thread_resume(fading_thread_id);
-            k_thread_suspend(blinking_thread_id);
-            break;
-        case MODO_2:
-            self.mode = MODO_1;
-            k_thread_resume(blinking_thread_id);
-            k_thread_suspend(fading_thread_id);
-            break;
-    }
-}
-
-static struct gpio_callback button_cb;
-
+/**
+ * @brief Produtor, simulando os sensores.
+ */
 int main() {
-    const struct gpio_dt_spec button_spec = BUTTON_GPIO_SPEC;
+    struct sensing_msg send_msg;
 
-    if (!gpio_is_ready_dt(&button_spec)) {
-        LOG_ERR("Button gpio configure failed");
-        return -ENODEV;
+    while (true) {
+        send_msg.sensor_type = SENSOR_HUMIDITY;
+        send_msg.humidity = get_humidity();
+
+        k_msgq_put(&filter_q, &send_msg, K_FOREVER);
+        k_msleep(k_cycle_get_32() % 500);
+
+        send_msg.sensor_type = SENSOR_TEMPERATURE;
+        send_msg.temperature = get_temperature();
+
+        k_msgq_put(&filter_q, &send_msg, K_FOREVER);
+        k_msleep(k_cycle_get_32() % 500);
     }
 
-    if (!pwm_is_ready_dt(&pwm_spec)) {
-        LOG_ERR("PWM gpio configure failed");
-        return -ENODEV;
-    }
-
-    if (gpio_pin_configure_dt(&button_spec, GPIO_INPUT | GPIO_PULL_UP) || gpio_pin_interrupt_configure_dt(
-            &button_spec, GPIO_INT_EDGE_FALLING)) {
-        LOG_ERR("Could not setup button as interrupt.");
-        return -ENOTSUP;
-    }
-    gpio_init_callback(&button_cb, button_pressed_cb, BIT(button_spec.pin));
-    gpio_add_callback_dt(&button_spec, &button_cb);
-
-    self.mode = MODO_1;
-    k_thread_suspend(fading_thread_id);
-    k_thread_start(blinking_thread_id);
+    return 0;
 }
+
+int processing_thread(void* arg1, void* arg2, void* arg3) {
+    ARG_UNUSED(arg1);
+    ARG_UNUSED(arg2);
+    ARG_UNUSED(arg3);
+
+    struct sensing_msg recv_msg;
+
+    while (true) {
+        if (k_msgq_get(&out_q, &recv_msg, K_FOREVER) != 0) {
+            continue;
+        }
+
+        switch (recv_msg.sensor_type) {
+            case SENSOR_HUMIDITY:
+                LOG_INF("Received humidity reading: %d%%", recv_msg.humidity);
+                break;
+            case SENSOR_TEMPERATURE:
+                LOG_INF("Received temperature reading: %d°C", recv_msg.temperature);
+                break;
+        }
+    }
+
+    return 0;
+}
+
+int filtering_thread(void* arg1, void* arg2, void* arg3) {
+    ARG_UNUSED(arg1);
+    ARG_UNUSED(arg2);
+    ARG_UNUSED(arg3);
+
+    struct sensing_msg recv_msg;
+
+    while (true) {
+        if (k_msgq_get(&filter_q, &recv_msg, K_FOREVER) != 0) {
+            continue;
+        }
+
+        switch (recv_msg.sensor_type) {
+            case SENSOR_HUMIDITY:
+                if ((recv_msg.humidity > MAX_HUMIDITY) || (recv_msg.humidity < MIN_HUMIDITY)) {
+                    LOG_ERR("Invalid data received from humidity sensor: %d%%", recv_msg.humidity);
+                    continue;
+                }
+                break;
+            case SENSOR_TEMPERATURE:
+                if ((recv_msg.temperature > MAX_TEMP) || (recv_msg.temperature < MIN_TEMP)) {
+                    LOG_ERR("Invalid data received from temperature sensor: %d°C", recv_msg.temperature);
+                    continue;
+                }
+                break;
+        }
+
+        k_msgq_put(&out_q, &recv_msg, K_FOREVER);
+    }
+
+    return 0;
+}
+
+K_THREAD_DEFINE(filtering_thread_id, 1048, filtering_thread, NULL, NULL, NULL, 5, 0, 0);
+K_THREAD_DEFINE(processing_thread_id, 1048, processing_thread, NULL, NULL, NULL, 5, 0, 0);
