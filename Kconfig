@@ -1,7 +1,19 @@
-menu "Menu do projeto"
-    config HELLO_TIMER_PERIOD_MS
-        int "Periodo de notificação do 'Hello World', em milissegundos"
-        default 1500
+menu "ATV-4 Menu"
+    config WIFI_SSID
+      string "Wi-Fi SSID"
+
+    config WIFI_PASSWD
+      string "Wi-Fi Password"
+        help
+          Sets WiFi password
+
+    config SNTP_HOSTNAME
+      string "Hostname for SNTP Server"
+
+    config UTC_OFFSET
+      int "UTC offset"
+      default 0
+      range -12 12
 endmenu
 
 source "Kconfig.zephyr"
