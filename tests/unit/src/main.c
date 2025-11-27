@@ -57,7 +57,6 @@ ZTEST(radar_unit, test_speed_calculation) {
 
     zassert_within(speed_kmph, 100, 1, "Erro de arredondamento na velocidade: %d", speed_kmph);
     zassert_within(speed_cmps, 2777, 1, "Erro de arredondamento na velocidade: %d", speed_cmps);
-
 }
 
 ZTEST(radar_unit, test_speed_invalid) {
