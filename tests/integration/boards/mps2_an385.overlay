@@ -1,0 +1,32 @@
+#include <zephyr/dt-bindings/gpio/gpio.h>
+
+/ {
+	aliases {
+		sensor-gpio5 = &sensor1;
+		sensor-gpio6 = &sensor2;
+	};
+
+	gpio_emul: gpio_emul {
+		compatible = "zephyr,gpio-emul";
+		status = "okay";
+		gpio-controller;
+		#gpio-cells = <2>;
+		ngpios = <32>;
+
+		rising-edge;
+	};
+
+	gpio_keys {
+		compatible = "gpio-keys";
+		debounce-interval-ms = <20>;
+
+		sensor1: sensor1 {
+			gpios = <&gpio_emul 5 (GPIO_PULL_DOWN | GPIO_ACTIVE_HIGH)>;
+		};
+
+		sensor2: sensor2 {
+			gpios = <&gpio_emul 6 (GPIO_PULL_DOWN | GPIO_ACTIVE_HIGH)>;
+		};
+	};
+};
+

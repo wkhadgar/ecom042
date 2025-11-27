@@ -53,7 +53,7 @@ extern struct k_msgq sensor_msgq;
  * @param[out] speed_cm_s Ponteiro para armazenar a velocidade calculada em centímetros por segundo (cm/s).
  * @param[out] speed_kmph Ponteiro para armazenar a velocidade calculada em quilômetros por hora (km/h).
  */
-void sensor_calc_speed(uint64_t delta_us, uint32_t* speed_cm_s, uint32_t* speed_kmph);
+void sensor_calc_speed(uint32_t delta_us, uint32_t* speed_cm_s, uint32_t* speed_kmph);
 
 /**
  * @brief Obtém o estado da FSM do radar.

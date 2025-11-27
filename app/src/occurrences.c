@@ -17,51 +17,53 @@
 LOG_MODULE_REGISTER(occurrences, LOG_LEVEL_INF);
 
 bool occurrences_is_plate_valid(const char* plate) {
-    if (strlen(plate) != 7) {
-        return false;
-    }
+    size_t len = strlen(plate);
 
     /* Brasil: ABC1D23 */
-    if (isalpha(plate[0]) && isalpha(plate[1]) && isalpha(plate[2]) &&
-        isdigit(plate[3]) && isalpha(plate[4]) && isdigit(plate[5]) &&
-        isdigit(plate[6])) {
-        return true;
+    if (len == 7) {
+        if (isalpha(plate[0]) && isalpha(plate[1]) && isalpha(plate[2]) &&
+            isdigit(plate[3]) &&
+            isalpha(plate[4]) &&
+            isdigit(plate[5]) && isdigit(plate[6])) {
+            return true;
         }
+    }
 
     /* Argentina: AB 123 CD */
-    if (isalpha(plate[0]) && isalpha(plate[1]) && isdigit(plate[2]) &&
-        isdigit(plate[3]) && isdigit(plate[4]) && isalpha(plate[5]) &&
-        isalpha(plate[6])) {
-        return true;
+    else if (len == 9) {
+        if (isalpha(plate[0]) && isalpha(plate[1]) &&
+            plate[2] == ' ' &&
+            isdigit(plate[3]) && isdigit(plate[4]) && isdigit(plate[5]) &&
+            plate[6] == ' ' &&
+            isalpha(plate[7]) && isalpha(plate[8])) {
+            return true;
+        }
+    }
+
+    else if (len == 8) {
+        /* Paraguai: ABCD 123 */
+        if (plate[4] == ' ' && isalpha(plate[0]) && isalpha(plate[1]) && isalpha(plate[2]) && isalpha(plate[3]) &&
+            isdigit(plate[5]) && isdigit(plate[6]) && isdigit(plate[7])) {
+            return true;
         }
 
-    /* Paraguai: ABCD 123 */
-    if (isalpha(plate[0]) && isalpha(plate[1]) && isalpha(plate[2]) &&
-        isalpha(plate[3]) && isdigit(plate[4]) && isdigit(plate[5]) &&
-        isdigit(plate[6])) {
-        return true;
+        /* Uruguai: ABC 1234 */
+        if (plate[3] == ' ' && isalpha(plate[0]) && isalpha(plate[1]) && isalpha(plate[2]) &&
+            isdigit(plate[4]) && isdigit(plate[5]) && isdigit(plate[6]) && isdigit(plate[7])) {
+            return true;
         }
 
-    /* Uruguai: ABC 1234 */
-    if (isalpha(plate[0]) && isalpha(plate[1]) && isalpha(plate[2]) &&
-        isdigit(plate[3]) && isdigit(plate[4]) && isdigit(plate[5]) &&
-        isdigit(plate[6])) {
-        return true;
+        /* Bolívia: AB 12345 */
+        if (plate[2] == ' ' && isalpha(plate[0]) && isalpha(plate[1]) &&
+            isdigit(plate[3]) && isdigit(plate[4]) && isdigit(plate[5]) && isdigit(plate[6]) && isdigit(plate[7])) {
+            return true;
         }
+    }
 
-
-    /* Bolívia: AB 12345 */
-    if (isalpha(plate[0]) && isalpha(plate[1]) && isdigit(plate[2]) &&
-        isdigit(plate[3]) && isdigit(plate[4]) && isdigit(plate[5]) &&
-        isdigit(plate[6])) {
-        return true;
-        }
-
-    LOG_WRN("Placa invalida: %s", plate);
+    LOG_WRN("Placa fora de padrão ou tamanho inválido (%d): %s", len, plate);
 
     return false;
 }
-
 
 static bool plate_validator(const void* msg, size_t msg_size) {
     ARG_UNUSED(msg_size);

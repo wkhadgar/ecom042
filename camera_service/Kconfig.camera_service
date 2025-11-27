@@ -12,6 +12,13 @@ config QEMU_ICOUNT
     bool
     default n
 
+config RADAR_CAMERA_FAILURE_RATE_PERCENT
+    int "Simulated Camera Failure Rate (%)"
+    range 0 100
+    default 10
+    help
+      Chance of the simulated camera returning an 'Invalid Plate' error upon trigger.
+
 endif
 
 endmenu

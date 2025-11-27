@@ -53,8 +53,10 @@ _Noreturn int main(void) {
         occurrence.type = sensor_data_msg.type;
         occurrence.speed_kmph = sensor_data_msg.speed_kmph;
 
-        if (!is_speeding(&occurrence) && zbus_chan_pub(&non_infraction_chan, &occurrence, K_FOREVER) != 0) {
-            LOG_WRN("Não foi possível registrar o veiculo.");
+        if (!is_speeding(&occurrence)) {
+            if (zbus_chan_pub(&non_infraction_chan, &occurrence, K_FOREVER) != 0) {
+                LOG_WRN("Não foi possível registrar o veiculo (permissivo).");
+            }
             continue;
         }
 
@@ -82,8 +84,8 @@ _Noreturn int main(void) {
 
         occurrence.plate = rsp.captured_data->plate;
 
-        if (zbus_chan_pub(&infraction_chan, &occurrence, K_FOREVER) != -ENOMSG) {
-            LOG_WRN("Não foi possível registrar o veiculo.");
+        if (zbus_chan_pub(&infraction_chan, &occurrence, K_FOREVER) == -ENOMSG) {
+            LOG_WRN("Não foi possível registrar o veiculo infrator.");
         }
     }
 }

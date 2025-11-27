@@ -25,13 +25,6 @@ menu "Radar System Configuration"
         help
           Speed percentage relative to the limit that triggers the 'Yellow' (Alert) status.
 
-    config RADAR_CAMERA_FAILURE_RATE_PERCENT
-        int "Simulated Camera Failure Rate (%)"
-        range 0 100
-        default 10
-        help
-          Chance of the simulated camera returning an 'Invalid Plate' error upon trigger.
-
     config RADAR_MAX_AXLE_SPACING_MM
         int "Maximum length of a wheelbase, in millimeters."
         range 1000 18000

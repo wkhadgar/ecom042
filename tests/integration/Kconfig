@@ -1,42 +1,21 @@
-menu "Radar System Configuration"
-    config RADAR_SENSOR_DISTANCE_MM
-        int "Distance between magnetic sensors (mm)"
-        default 1000
-        range 500 1500
-        help
-          Physical distance between the two magnetic sensors, used for speed calculation.
+config RADAR_SENSOR_DISTANCE_MM
+    int
+    default 3000
 
-    config RADAR_SPEED_LIMIT_LIGHT_KMH
-        int "Speed limit for Light Vehicles (km/h)"
-        default 80
-        help
-          Maximum allowed speed for vehicles classified as 'Light' (2 axles).
+config RADAR_MAX_AXLE_SPACING_MM
+    int
+    default 12000
 
-    config RADAR_SPEED_LIMIT_HEAVY_KMH
-        int "Speed limit for Heavy Vehicles (km/h)"
-        default 60
-        help
-          Maximum allowed speed for vehicles classified as 'Heavy' (3+ axles).
+config RADAR_SPEED_LIMIT_LIGHT_KMH
+    int
+    default 80
 
-    config RADAR_WARNING_THRESHOLD_PERCENT
-        int "Warning Threshold (% of limit)"
-        range 1 100
-        default 90
-        help
-          Speed percentage relative to the limit that triggers the 'Yellow' (Alert) status.
+config RADAR_SPEED_LIMIT_HEAVY_KMH
+    int
+    default 60
 
-    config RADAR_CAMERA_FAILURE_RATE_PERCENT
-        int "Simulated Camera Failure Rate (%)"
-        range 0 100
-        default 10
-        help
-          Chance of the simulated camera returning an 'Invalid Plate' error upon trigger.
-
-    config RADAR_MAX_AXLE_SPACING_MM
-        int "Maximum length of a wheelbase, in millimeters."
-        range 1000 18000
-        default 12000
-
-endmenu
+config RADAR_WARNING_THRESHOLD_PERCENT
+    int
+    default 90
 
 source "Kconfig.zephyr"

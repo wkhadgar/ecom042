@@ -30,7 +30,7 @@
  */
 static const struct gpio_dt_spec sensor1_gpio = GPIO_DT_SPEC_GET(DT_ALIAS(sensor_gpio5), gpios);
 /**
- * @brief GPIO para o segundo sensor (GPIO 6).
+ * @brief GPIO para o segundo sensor (GPIO 6s).
  */
 static const struct gpio_dt_spec sensor2_gpio = GPIO_DT_SPEC_GET(DT_ALIAS(sensor_gpio6), gpios);
 
@@ -53,9 +53,9 @@ static void finalize_vehicle(void);
 static struct {
     volatile uint8_t axle_count; /**< Contador de eixos detectados (pulsos no sensor 1). */
     enum radar_state current_state; /**< Estado atual. */
-    uint64_t start_time_us; /**< Tempo de início da medição de trânsito (primeiro sensor) em microssegundos. */
-    uint64_t last_pulse_us;
-    uint64_t max_inter_axle_us;
+    uint32_t start_time_us; /**< Tempo de início da medição de trânsito (primeiro sensor) em microssegundos. */
+    uint32_t last_pulse_us;
+    uint32_t max_inter_axle_us;
     struct sensor_data_msg msg; /**< Mensagem de sensoreamento. */
 } self = {
     .current_state = RADAR_STATE_IDLE,
@@ -93,7 +93,7 @@ static void finalize_vehicle(void) {
     self.axle_count = 0;
 }
 
-void sensor_calc_speed(const uint64_t delta_us, uint32_t* speed_cm_s, uint32_t* speed_kmph) {
+void sensor_calc_speed(const uint32_t delta_us, uint32_t* speed_cm_s, uint32_t* speed_kmph) {
     __ASSERT((speed_kmph != NULL && speed_cm_s != NULL), "NULL pointers were given.");
 
     if (delta_us == 0) {
@@ -120,8 +120,8 @@ void sensor1_isr_callback(const struct device* dev, struct gpio_callback* cb, ui
     ARG_UNUSED(cb);
     ARG_UNUSED(pins);
 
-    const uint64_t now_cycles = k_cycle_get_64();
-    const uint64_t now_us = k_cyc_to_us_ceil64(now_cycles);
+    const uint32_t now_cycles = k_cycle_get_32();
+    const uint32_t now_us = k_cyc_to_us_ceil32(now_cycles);
 
     switch (self.current_state) {
         case RADAR_STATE_IDLE:
@@ -140,7 +140,7 @@ void sensor1_isr_callback(const struct device* dev, struct gpio_callback* cb, ui
             break;
 
         case RADAR_STATE_OBSERVING: {
-            const uint64_t delta_us = now_us - self.last_pulse_us;
+            const uint32_t delta_us = now_us - self.last_pulse_us;
 
             /* Caso em que outro veículo (pela distância) está sendo registrado. */
             if (delta_us > self.max_inter_axle_us) {
@@ -175,8 +175,8 @@ void sensor2_isr_callback(const struct device* dev, struct gpio_callback* cb, ui
     uint32_t speed_cm_s = 0;
 
     if (self.current_state == RADAR_STATE_SPEED_MEASURING) {
-        const uint64_t now_cycles = k_cycle_get_64();
-        uint64_t cycles_delta_us = k_cyc_to_us_ceil64(now_cycles) - self.start_time_us;
+        const uint32_t now_cycles = k_cycle_get_32();
+        uint32_t cycles_delta_us = k_cyc_to_us_ceil32(now_cycles) - self.start_time_us;
 
         /* Proteção contra divisão por zero ou ruído extremo */
         if (cycles_delta_us < 1000) {
@@ -205,12 +205,12 @@ void sensor2_isr_callback(const struct device* dev, struct gpio_callback* cb, ui
  */
 int sensor_init(void) {
     if (!device_is_ready(sensor1_gpio.port) || !device_is_ready(sensor2_gpio.port)) {
-        LOG_ERR("Erro: Dispositivos GPIO dos sensores não estão prontos!\n");
+        LOG_ERR("Dispositivos GPIO dos sensores nao estao prontos!\n");
         return -ENODEV;
     }
 
-    int err = gpio_pin_configure_dt(&sensor1_gpio, GPIO_INPUT | GPIO_PULL_DOWN) || gpio_pin_configure_dt(
-                  &sensor2_gpio, GPIO_INPUT | GPIO_PULL_DOWN);
+    int err = gpio_pin_configure_dt(&sensor1_gpio, GPIO_INPUT | GPIO_OUTPUT | GPIO_PULL_DOWN) || gpio_pin_configure_dt(
+                  &sensor2_gpio, GPIO_INPUT | GPIO_OUTPUT | GPIO_PULL_DOWN);
     if (err < 0) {
         LOG_ERR("Erro ao configurar GPIOs: %d\n", err);
         return err;
@@ -232,7 +232,7 @@ int sensor_init(void) {
         return err;
     }
 
-    LOG_INF("Inicialização concluída. Aguardando passagem.\n");
+    LOG_INF("Inicializacao concluida. Aguardando passagem.\n");
 
     return 0;
 }
@@ -255,7 +255,7 @@ void sensor_thread(void* p1, void* p2, void* p3) {
         }
 
         if (k_msgq_put(&sensor_msgq, &self.msg, K_USEC(self.max_inter_axle_us)) != 0) {
-            LOG_WRN("Fila de sensores cheia, veículo perdido.");
+            LOG_WRN("Fila de sensores cheia, veiculo perdido.");
         }
     }
 }

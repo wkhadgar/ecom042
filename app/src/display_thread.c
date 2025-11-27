@@ -24,6 +24,13 @@ LOG_MODULE_REGISTER(display, LOG_LEVEL_INF);
 #define ANSI_COLOR_YELLOW  "\x1b[33m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
 
+/**
+ * @brief Imprime o texto na tela, colorido e com fim de linha ('\\n').
+ *
+ * @param color Cor ANSI a ser usada para o printk.
+ */
+#define colored_printkln(color, ...) {printk("%s", color); printk(__VA_ARGS__); printk("%s\n", ANSI_COLOR_RESET);}
+
 ZBUS_MSG_SUBSCRIBER_DEFINE(msub_display);
 
 ZBUS_CHAN_ADD_OBS(infraction_chan, msub_display, 4);
@@ -70,31 +77,22 @@ _Noreturn void display_thread(void) {
             continue;
         }
 
-        /* Define string legível para o tipo */
         const char* vehicle_str = (msg.type == VEHICLE_TYPE_HEAVY) ? "PESADO" : "LEVE  ";
-
-        /* Calcula cor e recupera limite */
         const char* color_code = resolve_status_color(&msg, &current_limit);
 
-        /* * Renderiza no "Display" (Console).
-         * Formato: [ VELOCIDADE ] [ TIPO ] [ STATUS ] [ PLACA? ]
-         */
-        printk("\r\n%s========================================%s\n", color_code, ANSI_COLOR_RESET);
-
-        printk("%s[RADAR] Velocidade: %3d km/h (Lim: %d)%s\n",
-               color_code, msg.speed_kmph, current_limit, ANSI_COLOR_RESET);
-
-        printk("%s[CLASS] Veiculo: %s%s\n",
-               color_code, vehicle_str, ANSI_COLOR_RESET);
+        colored_printkln(color_code, "\r\n========================================");
+        colored_printkln(color_code, "[RADAR] Velocidade: %3d km/h (Lim: %d)", msg.speed_kmph, current_limit);
+        colored_printkln(color_code, "[CLASS] Veiculo: %s", vehicle_str);
 
         if (chan == &infraction_chan) {
-            printk("%s[ALERT] INFRAÇÃO REGISTRADA! PLACA: %s%s\n",
-                   color_code, msg.plate, ANSI_COLOR_RESET);
+            colored_printkln(color_code, "[ALERT] INFRACAO REGISTRADA! PLACA: %s", msg.plate);
+        } else if (strcmp(color_code, ANSI_COLOR_YELLOW) == 0) {
+            colored_printkln(color_code, "[ WRN ] Passagem suspeita!");
         } else {
-            printk("%s[INFO ] Passagem Segura%s\n", color_code, ANSI_COLOR_RESET);
+            colored_printkln(color_code, "[INFO ] Passagem segura...");
         }
 
-        printk("%s========================================%s\n", color_code, ANSI_COLOR_RESET);
+        colored_printkln(color_code, "========================================\n");
     }
 }
 
