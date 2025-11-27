@@ -57,7 +57,7 @@ bool occurrences_is_plate_valid(const char* plate) {
         return true;
         }
 
-    LOG_WRN("Placa inválida: %s", plate);
+    LOG_WRN("Placa invalida: %s", plate);
 
     return false;
 }

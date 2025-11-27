@@ -1,0 +1,9 @@
+config RADAR_SENSOR_DISTANCE_MM
+    int
+    default 3000
+
+config RADAR_MAX_AXLE_SPACING_MM
+    int
+    default 12000
+
+source "Kconfig.zephyr"

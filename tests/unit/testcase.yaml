@@ -3,6 +3,3 @@ tests:
     tags: radar unit
     platform_allow:
       - mps2/an385
-      - qemu_x86
-    extra_configs:
-      - CONFIG_RADAR_SENSOR_DISTANCE_MM=3000

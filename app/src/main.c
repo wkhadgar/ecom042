@@ -38,7 +38,7 @@ static bool is_speeding(const struct occurrence_msg* occurrence) {
     return false;
 }
 
-__NO_RETURN int main(void) {
+_Noreturn int main(void) {
     const struct zbus_channel* chan;
     struct sensor_data_msg sensor_data_msg;
     struct occurrence_msg occurrence;

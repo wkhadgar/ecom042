@@ -60,7 +60,7 @@ static const char* resolve_status_color(const struct occurrence_msg* msg, uint32
     return ANSI_COLOR_GREEN;
 }
 
-__NO_RETURN void display_thread(void) {
+_Noreturn void display_thread(void) {
     const struct zbus_channel* chan;
     struct occurrence_msg msg;
     uint32_t current_limit;

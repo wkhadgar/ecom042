@@ -94,6 +94,8 @@ static void finalize_vehicle(void) {
 }
 
 void sensor_calc_speed(const uint64_t delta_us, uint32_t* speed_cm_s, uint32_t* speed_kmph) {
+    __ASSERT((speed_kmph != NULL && speed_cm_s != NULL), "NULL pointers were given.");
+
     if (delta_us == 0) {
         *speed_kmph = 0;
         *speed_cm_s = 0;
