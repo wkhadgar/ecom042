@@ -19,10 +19,10 @@ ZTEST_SUITE(radar_unit, NULL, NULL, NULL, NULL, NULL);
 
 ZTEST(radar_unit, test_mercosul_happy_way) {
     zassert_true(occurrences_is_plate_valid("ABC1D23"), "Brasil falhou");
-    zassert_true(occurrences_is_plate_valid("AB123CD"), "Argentina falhou");
-    zassert_true(occurrences_is_plate_valid("ABCD123"), "Paraguai falhou");
-    zassert_true(occurrences_is_plate_valid("ABC1234"), "Uruguai falhou");
-    zassert_true(occurrences_is_plate_valid("AB12345"), "Bolivia falhou");
+    zassert_true(occurrences_is_plate_valid("AB 123 CD"), "Argentina falhou");
+    zassert_true(occurrences_is_plate_valid("ABCD 123"), "Paraguai falhou");
+    zassert_true(occurrences_is_plate_valid("ABC 1234"), "Uruguai falhou");
+    zassert_true(occurrences_is_plate_valid("AB 12345"), "Bolivia falhou");
 }
 
 ZTEST(radar_unit, test_mercosul_only_numbers) {
@@ -40,7 +40,9 @@ ZTEST(radar_unit, test_mercosul_invalid_caracters) {
 
 ZTEST(radar_unit, test_mercosul_invalid_plate) {
     zassert_false(occurrences_is_plate_valid("ABC1D2E"), "Placa invalida passou");
-    zassert_false(occurrences_is_plate_valid("ABC123E"), "Placa invalida passou");
+    zassert_false(occurrences_is_plate_valid("ABC 123E"), "Placa invalida passou");
+    zassert_false(occurrences_is_plate_valid("ABCD E23"), "Placa invalida passou");
+    zassert_false(occurrences_is_plate_valid("A1 23456"), "Placa invalida passou");
 }
 
 ZTEST(radar_unit, test_speed_calculation) {
