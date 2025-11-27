@@ -1,5 +1,5 @@
 tests:
   radar.integration:
-    tags: radar unit
+    tags: radar integration
     platform_allow:
       - mps2/an385
