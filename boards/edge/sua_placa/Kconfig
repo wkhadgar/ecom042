@@ -1,9 +1,0 @@
-menu "Sua Placa Sub-menu"
-    config SUA_PLACA_MENU_EXAMPLE_SUBMENU
-        int "Configuração especifica do submenu da sua placa."
-        default 10
-endmenu
-
-config SUA_PLACA_MENU_EXAMPLE
-        int "Configuração especifica da sua placa."
-        default 100
