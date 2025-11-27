@@ -1,0 +1,7 @@
+gpio set gpio_emul 5 1
+gpio set gpio_emul 5 0
+kernel sleep 25
+gpio set gpio_emul 6 1
+gpio set gpio_emul 6 0
+
+
