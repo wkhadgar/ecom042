@@ -60,7 +60,7 @@ bool occurrences_is_plate_valid(const char* plate) {
         }
     }
 
-    LOG_WRN("Placa fora de padrão ou tamanho inválido (%d): %s", len, plate);
+    LOG_WRN("Placa fora de padrao ou tamanho invalido (%d): %s", len, plate);
 
     return false;
 }
